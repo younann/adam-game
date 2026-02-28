@@ -9,6 +9,7 @@ export const translations = {
     game4: "🖍️ COLORING BOOK",
     game5: "🧠 MEMORY MATCH",
     game6: "🔤 LETTER RACING",
+    game7: "📸 PHOTO BOOTH",
     back: "BACK",
     exit: "EXIT",
     level: "LEVEL",
@@ -86,6 +87,14 @@ export const translations = {
     draw: "DRAW",
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit Fullscreen",
+
+    // Photo Booth
+    photoTitle: "Photo Booth",
+    photoAddStickers: "Add Cars Stickers!",
+    photoTapToAdd: "Tap a character to add it to your photo",
+    photoRetake: "RETAKE",
+    photoSave: "SAVE PHOTO",
+    cameraError: "Could not open camera. Please allow camera access and try again.",
   },
   ar: {
     title: "مدرسة مكوين",
@@ -97,6 +106,7 @@ export const translations = {
     game4: "🖍️ دفتر التلوين",
     game5: "🧠 لعبة الذاكرة",
     game6: "🔤 سباق الحروف",
+    game7: "📸 استوديو الصور",
     back: "رجوع",
     exit: "خروج",
     level: "المستوى",
@@ -174,5 +184,13 @@ export const translations = {
     draw: "رسم",
     fullscreen: "ملء الشاشة",
     exitFullscreen: "خروج من ملء الشاشة",
+
+    // Photo Booth
+    photoTitle: "استوديو الصور",
+    photoAddStickers: "أضف ملصقات السيارات!",
+    photoTapToAdd: "اضغط على شخصية لإضافتها إلى صورتك",
+    photoRetake: "إعادة التصوير",
+    photoSave: "حفظ الصورة",
+    cameraError: "تعذر فتح الكاميرا. يرجى السماح بالوصول إلى الكاميرا والمحاولة مرة أخرى.",
   }
 };

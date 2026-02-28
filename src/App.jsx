@@ -6,6 +6,7 @@ import SignMatcher from './components/SignMatcher';
 import ColoringBook from './components/ColoringBook';
 import MemoryMatch from './components/MemoryMatch';
 import LetterRacing from './components/LetterRacing';
+import PhotoBooth from './components/PhotoBooth';
 import { translations } from './utils/translations';
 
 // Importing car assets for decoration
@@ -128,6 +129,13 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
         >
           {t.game6}
         </button>
+        <button
+          className="menu-btn"
+          onClick={() => onStartGame('photo')}
+          style={{ background: '#e76f51', color: 'white', borderBottom: '6px solid #c45a3c' }}
+        >
+          {t.game7}
+        </button>
       </div>
 
       <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
@@ -167,6 +175,7 @@ export default function App() {
       case 'coloring': return <ColoringBook onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'memory': return <MemoryMatch onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'letters': return <LetterRacing onBack={() => setGameState('menu')} lang={lang} t={t} />;
+      case 'photo': return <PhotoBooth onBack={() => setGameState('menu')} lang={lang} t={t} />;
       default: return <MainMenu onStartGame={(game) => setGameState(game)} lang={lang} setLang={setLang} />;
     }
   };
