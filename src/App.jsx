@@ -30,7 +30,25 @@ export const renderPersonalizedText = (parts, lang) => {
 const MainMenu = ({ onStartGame, lang, setLang }) => {
   const t = translations[lang];
   const isAr = lang === 'ar';
-  
+
+  const [isFullscreen, setIsFullscreen] = React.useState(!!document.fullscreenElement);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  React.useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const fullscreenSupported = document.fullscreenEnabled;
+
   return (
     <div className="main-menu animate-zoom" style={{ textAlign: 'center', position: 'relative', zIndex: 2, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div style={{ 
@@ -67,6 +85,23 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
         >
           AR
         </button>
+        {fullscreenSupported && (
+          <button
+            onClick={toggleFullscreen}
+            className="mode-btn"
+            style={{
+              padding: '6px 10px',
+              fontSize: '1rem',
+              background: isFullscreen ? 'var(--mcqueen-red)' : 'rgba(255,255,255,0.1)',
+              minWidth: '45px',
+              border: isFullscreen ? '2px solid white' : '1px solid rgba(255,255,255,0.2)',
+              lineHeight: 1,
+            }}
+            title={isFullscreen ? (t.exitFullscreen || 'Exit Fullscreen') : (t.fullscreen || 'Fullscreen')}
+          >
+            {isFullscreen ? '⊡' : '⛶'}
+          </button>
+        )}
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
