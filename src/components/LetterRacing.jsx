@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
+import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -43,6 +44,7 @@ export default function LetterRacing({ onBack, lang, t }) {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
   const [gameStatus, setGameStatus] = useState('playing');
+  const [showConfetti, setShowConfetti] = useState(false);
   const waveTimerRef = useRef(null);
   const animFrameRef = useRef(null);
 
@@ -63,6 +65,7 @@ export default function LetterRacing({ onBack, lang, t }) {
           clearInterval(timer);
           setGameStatus('gameover');
           playWinSound();
+          setShowConfetti(true);
           return 0;
         }
         return prev - 1;
@@ -140,6 +143,7 @@ export default function LetterRacing({ onBack, lang, t }) {
     setScore(0);
     setTimeLeft(INITIAL_TIME);
     setGameStatus('playing');
+    setShowConfetti(false);
   };
 
   const isAr = lang === 'ar';
@@ -348,6 +352,7 @@ export default function LetterRacing({ onBack, lang, t }) {
         </div>
       </div>
 
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <style>{`
         @keyframes wobble {
           0% { transform: translateX(0); }

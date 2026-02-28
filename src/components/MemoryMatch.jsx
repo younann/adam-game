@@ -1,8 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
+import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
+import car1 from '../assets/cars/770c1752bd3dc58917586f5272de4068.jpg';
+import car2 from '../assets/cars/cars_3_characters-2.avif';
+import car3 from '../assets/cars/cars_3_characters-9.avif';
+import car4 from '../assets/cars/images.jpeg';
+import car5 from '../assets/cars/images12.jpeg';
+import car6 from '../assets/cars/images2.jpeg';
+import car7 from '../assets/cars/images21.jpeg';
+import car8 from '../assets/cars/images33.jpeg';
 
-const EMOJIS = ['🏎️', '🏁', '⛽', '🔧', '🛞', '🚦', '🏆', '⚡'];
+const CAR_IMAGES = [car1, car2, car3, car4, car5, car6, car7, car8];
 
 function shuffleArray(arr) {
   const shuffled = [...arr];
@@ -14,11 +23,11 @@ function shuffleArray(arr) {
 }
 
 function createDeck() {
-  const pairs = [...EMOJIS, ...EMOJIS];
+  const pairs = [...CAR_IMAGES, ...CAR_IMAGES];
   const shuffled = shuffleArray(pairs);
-  return shuffled.map((emoji, index) => ({
+  return shuffled.map((img, index) => ({
     id: index,
-    emoji,
+    image: img,
     isFlipped: false,
     isMatched: false,
   }));
@@ -30,6 +39,7 @@ export default function MemoryMatch({ onBack, lang, t }) {
   const [moves, setMoves] = useState(0);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [locked, setLocked] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const isArabic = lang === 'ar';
 
@@ -53,7 +63,7 @@ export default function MemoryMatch({ onBack, lang, t }) {
       setMoves(newMoves);
 
       const [first, second] = newFlipped;
-      if (newCards[first].emoji === newCards[second].emoji) {
+      if (newCards[first].image === newCards[second].image) {
         // Match found
         const matched = newCards.map((card, i) =>
           i === first || i === second ? { ...card, isMatched: true } : card
@@ -64,8 +74,9 @@ export default function MemoryMatch({ onBack, lang, t }) {
         const newMatchedPairs = matchedPairs + 1;
         setMatchedPairs(newMatchedPairs);
 
-        if (newMatchedPairs === EMOJIS.length) {
+        if (newMatchedPairs === CAR_IMAGES.length) {
           playWinSound();
+          setShowConfetti(true);
         }
       } else {
         // No match — flip back after delay
@@ -89,9 +100,10 @@ export default function MemoryMatch({ onBack, lang, t }) {
     setMoves(0);
     setMatchedPairs(0);
     setLocked(false);
+    setShowConfetti(false);
   };
 
-  const allMatched = matchedPairs === EMOJIS.length;
+  const allMatched = matchedPairs === CAR_IMAGES.length;
 
   return (
     <div className="game-screen animate-slide-up" style={{ textAlign: 'center', width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -128,15 +140,25 @@ export default function MemoryMatch({ onBack, lang, t }) {
         <div style={{ minWidth: '80px' }}></div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      {/* Card grid container */}
+      <div style={{ 
+        flex: 1, 
+        width: '100%',
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        paddingBottom: '20px'
+      }}>
         {/* Stats bar */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           gap: '1.5rem',
-          marginBottom: '1.5rem',
+          marginBottom: '2rem',
           flexWrap: 'wrap',
+          width: '100%',
         }}>
           <span style={{
             fontSize: 'clamp(0.9rem, 3.5vw, 1.1rem)',
@@ -148,7 +170,7 @@ export default function MemoryMatch({ onBack, lang, t }) {
             border: '2px solid var(--vibrant-blue)',
             boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
           }}>
-            {t.memoryMoves}: {moves}
+            {t.memoryMoves}: <span dir="ltr">{moves}</span>
           </span>
           <span style={{
             fontSize: 'clamp(0.9rem, 3.5vw, 1.1rem)',
@@ -160,20 +182,21 @@ export default function MemoryMatch({ onBack, lang, t }) {
             border: '2px solid var(--mcqueen-red)',
             boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
           }}>
-            {t.memoryMatched}: {matchedPairs} / {EMOJIS.length}
+            {t.memoryMatched}: <span dir="ltr">{matchedPairs} / {CAR_IMAGES.length}</span>
           </span>
         </div>
 
-      {/* Card grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '0.8rem',
-        maxWidth: '400px',
-        margin: '0 auto',
-        padding: '0 10px',
-        perspective: '800px',
-      }}>
+        {/* Card grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '0.8rem',
+          width: '100%',
+          maxWidth: '500px',
+          margin: '0 auto',
+          padding: '0 10px',
+          perspective: '1000px',
+        }}>
         {cards.map((card, index) => {
           const isFaceUp = card.isFlipped || card.isMatched;
           return (
@@ -224,7 +247,7 @@ export default function MemoryMatch({ onBack, lang, t }) {
                   transform: 'rotateY(180deg)',
                   background: card.isMatched
                     ? 'linear-gradient(135deg, rgba(255,183,3,0.3), rgba(255,183,3,0.1))'
-                    : 'rgba(255,255,255,0.1)',
+                    : '#fff', // White background for the car images to pop
                   borderRadius: '12px',
                   border: card.isMatched
                     ? '3px solid var(--lightning-yellow)'
@@ -232,13 +255,13 @@ export default function MemoryMatch({ onBack, lang, t }) {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  fontSize: 'clamp(2rem, 8vw, 2.8rem)',
+                  overflow: 'hidden', 
                   boxShadow: card.isMatched
                     ? '0 0 20px rgba(255,183,3,0.6), inset 0 0 15px rgba(255,183,3,0.2)'
                     : '0 4px 12px rgba(0,0,0,0.4)',
                   userSelect: 'none',
                 }}>
-                  {card.emoji}
+                  <img src={card.image} alt="car" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               </div>
             </div>
@@ -301,6 +324,7 @@ export default function MemoryMatch({ onBack, lang, t }) {
           </button>
         </div>
       )}
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
     </div>
   );
 }

@@ -10,8 +10,6 @@ import { translations } from './utils/translations';
 
 // Importing car assets for decoration
 import mcqueenHero from './assets/cars/770c1752bd3dc58917586f5272de4068.jpg';
-import car2 from './assets/cars/images.jpeg';
-import car3 from './assets/cars/images2.jpeg';
 
 // Helper to render text with the popping ADAM name
 export const renderPersonalizedText = (parts, lang) => {
@@ -19,7 +17,7 @@ export const renderPersonalizedText = (parts, lang) => {
   return parts.map((part, i) => {
     if (part === "{ADAM}") {
       return (
-        <span key={i} className="name-pop">
+        <span key={i} className="name-pop" style={{ fontSize: '2.2rem' }}>
           {lang === 'ar' ? 'آدم' : 'ADAM'}
         </span>
       );
@@ -31,7 +29,25 @@ export const renderPersonalizedText = (parts, lang) => {
 const MainMenu = ({ onStartGame, lang, setLang }) => {
   const t = translations[lang];
   const isAr = lang === 'ar';
-  
+
+  const [isFullscreen, setIsFullscreen] = React.useState(!!document.fullscreenElement);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  React.useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const fullscreenSupported = document.fullscreenEnabled;
+
   return (
     <div className="main-menu animate-zoom" style={{ textAlign: 'center', position: 'relative', zIndex: 2, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div style={{ 
@@ -68,6 +84,23 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
         >
           AR
         </button>
+        {fullscreenSupported && (
+          <button
+            onClick={toggleFullscreen}
+            className="mode-btn"
+            style={{
+              padding: '6px 10px',
+              fontSize: '1rem',
+              background: isFullscreen ? 'var(--mcqueen-red)' : 'rgba(255,255,255,0.1)',
+              minWidth: '45px',
+              border: isFullscreen ? '2px solid white' : '1px solid rgba(255,255,255,0.2)',
+              lineHeight: 1,
+            }}
+            title={isFullscreen ? (t.exitFullscreen || 'Exit Fullscreen') : (t.fullscreen || 'Fullscreen')}
+          >
+            {isFullscreen ? '⊡' : '⛶'}
+          </button>
+        )}
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
@@ -75,7 +108,7 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
           {t.title} <br/>
           <span className="main-subtitle" style={{ color: 'var(--mcqueen-red)' }}>{t.subtitle}</span>
         </h1>
-        <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)', marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)', marginBottom: '1.5rem',marginTop: '1.5rem' }}>
           {renderPersonalizedText(t.tagline, lang)}
         </p>
       </div>
@@ -176,8 +209,7 @@ export default function App() {
   return (
     <div className="app-container">
       {/* Background Decorations - Enhanced visibility */}
-      <img src={car2} style={{ position: 'fixed', top: '10%', left: '2%', width: 'clamp(80px, 15vw, 150px)', opacity: 0.3, zIndex: 0, filter: 'blur(1px)' }} alt="" />
-      <img src={car3} style={{ position: 'fixed', bottom: '10%', right: '2%', width: 'clamp(100px, 20vw, 180px)', opacity: 0.3, zIndex: 0, filter: 'blur(1px)' }} alt="" />
+
       
       <div className="glass-card">
         {renderGame()}

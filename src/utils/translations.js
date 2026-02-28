@@ -82,7 +82,9 @@ export const translations = {
     // Deeper Coloring Book
     undo: "UNDO",
     fill: "FILL",
-    draw: "DRAW"
+    draw: "DRAW",
+    fullscreen: "Fullscreen",
+    exitFullscreen: "Exit Fullscreen",
   },
   ar: {
     title: "مدرسة مكوين",
@@ -167,6 +169,8 @@ export const translations = {
     // Deeper Coloring Book
     undo: "تراجع",
     fill: "ملء",
-    draw: "رسم"
+    draw: "رسم",
+    fullscreen: "ملء الشاشة",
+    exitFullscreen: "خروج من ملء الشاشة",
   }
 };

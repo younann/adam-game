@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
+import Confetti from './Confetti';
 
 export default function PaintShop({ onBack, lang, t }) {
   const colors = [
@@ -22,6 +23,7 @@ export default function PaintShop({ onBack, lang, t }) {
   const [currentColor, setCurrentColor] = useState(colors[0]);
   const [currentPattern, setCurrentPattern] = useState(patterns[0]);
   const [isDriving, setIsDriving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   return (
     <div className="game-screen animate-slide-up" style={{ textAlign: 'center', width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -152,8 +154,10 @@ export default function PaintShop({ onBack, lang, t }) {
           if (isDriving) return;
           setIsDriving(true);
           playWinSound();
+          setShowConfetti(true);
           setTimeout(() => {
             setIsDriving(false);
+            setShowConfetti(false);
             setCurrentColor(colors[0]);
             setCurrentPattern(patterns[0]);
           }, 1500);
@@ -173,6 +177,7 @@ export default function PaintShop({ onBack, lang, t }) {
       >
         {t.paintDone}
       </button>
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
     </div>
   );
 }

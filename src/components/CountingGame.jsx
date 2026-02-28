@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
+import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
 
 const CAR_TYPES = [
@@ -23,6 +24,7 @@ export default function CountingGame({ onBack, lang, t }) {
   const [cars, setCars] = useState([]);
   const [gameStatus, setGameStatus] = useState('playing'); // playing, won
   const [wobbleId, setWobbleId] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const levels = getLevels(t);
   const currentLevel = levels[levelIdx];
@@ -80,6 +82,7 @@ export default function CountingGame({ onBack, lang, t }) {
     if (newCount >= currentLevel.target) {
       setGameStatus('won');
       playWinSound();
+      setShowConfetti(true);
     }
   };
 
@@ -89,6 +92,7 @@ export default function CountingGame({ onBack, lang, t }) {
       setCount(0);
       setCars([]);
       setGameStatus('playing');
+      setShowConfetti(false);
     } else {
       onBack();
     }
@@ -180,6 +184,7 @@ export default function CountingGame({ onBack, lang, t }) {
           </div>
         )}
       </div>
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
+import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
 
 function shuffleArray(arr) {
@@ -27,6 +28,7 @@ export default function SignMatcher({ onBack, lang, t }) {
   const [attempts, setAttempts] = useState(0);
   const [gameComplete, setGameComplete] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const shuffledShapes = useMemo(() => shuffleArray(shapes), [shuffleKey, t]);
 
@@ -39,15 +41,18 @@ export default function SignMatcher({ onBack, lang, t }) {
       setScore((prev) => prev + (attempts === 0 ? 2 : 1));
       if (currentIdx < shapes.length - 1) {
         playWinSound();
+        setShowConfetti(true);
         setTimeout(() => {
           setMatched(false);
           setAttempts(0);
           setCurrentIdx((prev) => prev + 1);
           setShuffleKey((prev) => prev + 1);
+          setShowConfetti(false);
         }, 1500);
       } else {
         setGameComplete(true);
         playWinSound();
+        setShowConfetti(true);
       }
     } else {
       setAttempts((prev) => prev + 1);
@@ -62,6 +67,7 @@ export default function SignMatcher({ onBack, lang, t }) {
     setGameComplete(false);
     setMatched(false);
     setShuffleKey((prev) => prev + 1);
+    setShowConfetti(false);
   };
 
   return (
@@ -173,6 +179,7 @@ export default function SignMatcher({ onBack, lang, t }) {
           </button>
         </div>
       )}
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
     </div>
   );
 }
