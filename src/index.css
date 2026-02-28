@@ -1,0 +1,304 @@
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&family=Cairo:wght@400;700&display=swap');
+
+:root {
+  --mcqueen-red: #e63946;
+  --lightning-yellow: #ffb703;
+  --pavement-grey: #1d3557;
+  --vibrant-blue: #457b9d;
+  --off-white: #f1faee;
+  --glass-bg: rgba(20, 33, 61, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+[dir='rtl'] {
+  font-family: 'Cairo', sans-serif;
+}
+
+[dir='rtl'] h1, [dir='rtl'] h2, [dir='rtl'] h3, [dir='rtl'] button {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #0b0d17;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(230, 57, 70, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255, 183, 3, 0.15) 0px, transparent 50%);
+  color: var(--off-white);
+  min-height: 100dvh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(10px, 4vw, 30px);
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.glass-card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--glass-border);
+  border-radius: 30px;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+  width: 100%;
+  max-width: 900px;
+  min-height: min(600px, 90vh);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  margin: auto; /* Centering helper */
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 18px;
+  font-family: 'Luckiest Guy', cursive;
+  font-size: 1.3rem;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 0.8rem 1.5rem;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Racing Decorations */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: repeating-linear-gradient(
+    45deg,
+    #fff,
+    #fff 10px,
+    #000 10px,
+    #000 20px
+  );
+  opacity: 0.4;
+  border-radius: 30px 30px 0 0;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .glass-card {
+    padding: 1.2rem 1rem;
+    min-height: 85vh;
+    border-radius: 25px;
+  }
+  .glass-card::before {
+    border-radius: 25px 25px 0 0;
+  }
+  button {
+    font-size: 1.1rem;
+    padding: 0.7rem 1.2rem;
+  }
+  .main-title { font-size: 2.2rem !important; }
+  .main-subtitle { font-size: 2.8rem !important; }
+}
+
+/* Landscape Mobile Fixes */
+@media (max-height: 500px) and (orientation: landscape) {
+  .app-container {
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .glass-card {
+    min-height: auto;
+    padding: 1rem;
+  }
+}
+
+.main-title {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  text-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+}
+
+.main-subtitle {
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  text-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+}
+
+.name-pop {
+  display: inline-block;
+  color: var(--lightning-yellow);
+  animation: namePop 2s infinite ease-in-out;
+  font-family: 'Luckiest Guy', cursive;
+}
+
+/* Animations */
+@keyframes namePop {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.15) rotate(-3deg); color: #fff; }
+  50% { transform: scale(1) rotate(0deg); }
+  75% { transform: scale(1.15) rotate(3deg); color: var(--mcqueen-red); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-zoom { animation: zoomIn 0.4s ease-out forwards; }
+.animate-slide-up { animation: slideInUp 0.4s ease-out forwards; }
+
+.racing-car {
+  transition: transform 0.1s;
+}
+
+.racing-car:active {
+  transform: scale(1.2);
+}
+
+/* Memory Match Cards */
+.memory-card {
+  perspective: 800px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.memory-card:hover {
+  transform: scale(1.05);
+}
+
+.memory-card:active {
+  transform: scale(0.95);
+}
+
+.card-matched {
+  animation: cardGlow 1.5s infinite ease-in-out;
+}
+
+@keyframes cardGlow {
+  0% { box-shadow: 0 0 10px var(--lightning-yellow); }
+  50% { box-shadow: 0 0 25px var(--lightning-yellow), 0 0 50px rgba(255, 183, 3, 0.3); }
+  100% { box-shadow: 0 0 10px var(--lightning-yellow); }
+}
+
+/* Wobble animation for wrong taps */
+@keyframes wobble {
+  0% { transform: translateX(0); }
+  15% { transform: translateX(-8px) rotate(-3deg); }
+  30% { transform: translateX(8px) rotate(3deg); }
+  45% { transform: translateX(-6px) rotate(-2deg); }
+  60% { transform: translateX(6px) rotate(2deg); }
+  75% { transform: translateX(-3px) rotate(-1deg); }
+  100% { transform: translateX(0) rotate(0); }
+}
+
+.wobble {
+  animation: wobble 0.5s ease-in-out;
+}
+
+/* Letter Racing cars */
+.letter-car {
+  animation: pulse 1.5s infinite ease-in-out;
+  transition: transform 0.1s;
+}
+
+.letter-car:hover {
+  filter: brightness(1.2);
+  transform: scale(1.1);
+}
+
+/* Drive away animation for Paint Shop */
+@keyframes driveAway {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  100% { transform: translateX(500px) scale(0.5); opacity: 0; }
+}
+
+.drive-away {
+  animation: driveAway 1.5s ease-in forwards;
+}
+
+/* Card flip animation */
+@keyframes flipIn {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(180deg); }
+}
+
+/* Confetti-like celebration */
+@keyframes celebrate {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+
+.animate-celebrate {
+  animation: celebrate 0.6s ease-out forwards;
+}
+
+/* 6-button menu grid adjustments */
+@media (max-width: 600px) {
+  .menu-options {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.7rem !important;
+  }
+
+  .menu-btn {
+    font-size: 0.9rem !important;
+    padding: 0.7rem 0.5rem !important;
+  }
+
+  .memory-card {
+    min-height: 60px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .menu-options {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+/* Mode toggle buttons */
+.mode-btn {
+  transition: all 0.2s ease;
+}
+
+.mode-btn-active {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
