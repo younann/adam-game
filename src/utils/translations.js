@@ -78,6 +78,7 @@ export const translations = {
     signComplete: "ALL SIGNS MATCHED!",
     signScore: "Score",
     signOf: "of",
+    dragThe: "Drag the",
 
     // Deeper Coloring Book
     undo: "UNDO",
@@ -165,6 +166,7 @@ export const translations = {
     signComplete: "تم مطابقة كل الإشارات!",
     signScore: "النتيجة",
     signOf: "من",
+    dragThe: "اسحب الـ",
 
     // Deeper Coloring Book
     undo: "تراجع",
