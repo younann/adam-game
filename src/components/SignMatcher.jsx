@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { playBoop, playWinSound } from '../utils/audio';
 import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
@@ -29,13 +29,18 @@ export default function SignMatcher({ onBack, lang, t }) {
   const [gameComplete, setGameComplete] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [dragState, setDragState] = useState(null);
+  const [dragPos, setDragPos] = useState(null); // { shapeId, x, y }
   const [wrongId, setWrongId] = useState(null);
 
   const targetRef = useRef(null);
+  const dragRef = useRef(null); // keeps current drag state for event listeners
+
+  // Keep ref in sync with state so window listeners always see latest value
+  useEffect(() => {
+    dragRef.current = dragPos;
+  }, [dragPos]);
 
   const shuffledShapes = useMemo(() => shuffleArray(shapes), [shuffleKey, t]);
-
   const currentShape = shapes[currentIdx];
 
   const isOverTarget = useCallback((x, y) => {
@@ -48,12 +53,12 @@ export default function SignMatcher({ onBack, lang, t }) {
     if (matched || gameComplete) return;
 
     if (!isOverTarget(x, y)) {
-      setDragState(null);
+      setDragPos(null);
       return;
     }
 
     if (shapeId === currentShape.id) {
-      setDragState(null);
+      setDragPos(null);
       setMatched(true);
       setScore((prev) => prev + (attempts === 0 ? 2 : 1));
       if (currentIdx < shapes.length - 1) {
@@ -72,7 +77,7 @@ export default function SignMatcher({ onBack, lang, t }) {
         setShowConfetti(true);
       }
     } else {
-      setDragState(null);
+      setDragPos(null);
       setAttempts((prev) => prev + 1);
       playBoop();
       setWrongId(shapeId);
@@ -80,58 +85,59 @@ export default function SignMatcher({ onBack, lang, t }) {
     }
   }, [matched, gameComplete, currentShape, currentIdx, shapes.length, attempts, isOverTarget]);
 
-  // Touch handlers
+  // Store handleDrop in ref so window listeners see latest version
+  const handleDropRef = useRef(handleDrop);
+  useEffect(() => {
+    handleDropRef.current = handleDrop;
+  }, [handleDrop]);
+
+  // Start drag — touch
   const handleTouchStart = useCallback((e, shapeId) => {
     if (matched || gameComplete) return;
-    e.preventDefault();
     const touch = e.touches[0];
-    setDragState({
-      shapeId,
-      currentX: touch.clientX,
-      currentY: touch.clientY,
-    });
+    setDragPos({ shapeId, x: touch.clientX, y: touch.clientY });
   }, [matched, gameComplete]);
 
-  const handleTouchMove = useCallback((e) => {
-    if (!dragState) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    setDragState((prev) => ({
-      ...prev,
-      currentX: touch.clientX,
-      currentY: touch.clientY,
-    }));
-  }, [dragState]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (!dragState) return;
-    handleDrop(dragState.shapeId, dragState.currentX, dragState.currentY);
-  }, [dragState, handleDrop]);
-
-  // Mouse handlers (for desktop testing)
+  // Start drag — mouse
   const handleMouseDown = useCallback((e, shapeId) => {
     if (matched || gameComplete) return;
     e.preventDefault();
-    setDragState({
-      shapeId,
-      currentX: e.clientX,
-      currentY: e.clientY,
-    });
+    setDragPos({ shapeId, x: e.clientX, y: e.clientY });
   }, [matched, gameComplete]);
 
-  const handleMouseMove = useCallback((e) => {
-    if (!dragState) return;
-    setDragState((prev) => ({
-      ...prev,
-      currentX: e.clientX,
-      currentY: e.clientY,
-    }));
-  }, [dragState]);
+  // Attach move/end listeners to window when dragging (fixes cursor-leaving-component issue)
+  useEffect(() => {
+    if (!dragPos) return;
 
-  const handleMouseUp = useCallback(() => {
-    if (!dragState) return;
-    handleDrop(dragState.shapeId, dragState.currentX, dragState.currentY);
-  }, [dragState, handleDrop]);
+    const onMouseMove = (e) => {
+      setDragPos((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+    };
+    const onMouseUp = (e) => {
+      const d = dragRef.current;
+      if (d) handleDropRef.current(d.shapeId, e.clientX, e.clientY);
+    };
+    const onTouchMove = (e) => {
+      e.preventDefault(); // works because { passive: false }
+      const touch = e.touches[0];
+      setDragPos((prev) => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
+    };
+    const onTouchEnd = (e) => {
+      const d = dragRef.current;
+      if (d) handleDropRef.current(d.shapeId, d.x, d.y);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [!!dragPos]); // only re-attach when drag starts/stops
 
   const handlePlayAgain = () => {
     setCurrentIdx(0);
@@ -141,22 +147,17 @@ export default function SignMatcher({ onBack, lang, t }) {
     setMatched(false);
     setShuffleKey((prev) => prev + 1);
     setShowConfetti(false);
-    setDragState(null);
+    setDragPos(null);
     setWrongId(null);
   };
 
-  const draggedShape = dragState ? shapes.find((s) => s.id === dragState.shapeId) || shuffledShapes.find((s) => s.id === dragState.shapeId) : null;
-
-  const isOverDropZone = dragState ? isOverTarget(dragState.currentX, dragState.currentY) : false;
+  const draggedShape = dragPos ? shapes.find((s) => s.id === dragPos.shapeId) || shuffledShapes.find((s) => s.id === dragPos.shapeId) : null;
+  const isOverDropZone = dragPos ? isOverTarget(dragPos.x, dragPos.y) : false;
 
   return (
     <div
       className="game-screen animate-slide-up"
       style={{ textAlign: 'center', width: '100%', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', userSelect: 'none' }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', width: '100%', padding: '0 5px', gap: '10px' }}>
         <button onClick={onBack} style={{ background: 'rgba(0,0,0,0.5)', fontSize: '0.9rem', color: 'white', padding: '0.6rem 1.2rem', minWidth: '80px' }}>{t.back}</button>
@@ -218,16 +219,16 @@ export default function SignMatcher({ onBack, lang, t }) {
                 background: s.color,
                 borderRadius: s.borderRadius || '0',
                 clipPath: s.clipPath || 'none',
-                cursor: 'grab',
+                cursor: dragPos?.shapeId === s.id ? 'grabbing' : 'grab',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 color: 'white',
                 fontWeight: 'bold',
                 fontSize: '0.85rem',
-                transition: dragState?.shapeId === s.id ? 'none' : 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                transition: dragPos?.shapeId === s.id ? 'none' : 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                 boxShadow: '0 8px 15px rgba(0,0,0,0.4)',
-                opacity: dragState?.shapeId === s.id ? 0.3 : 1,
+                opacity: dragPos?.shapeId === s.id ? 0.3 : 1,
                 touchAction: 'none',
                 border: '3px solid rgba(255,255,255,0.5)',
               }}
@@ -275,12 +276,12 @@ export default function SignMatcher({ onBack, lang, t }) {
       )}
 
       {/* Floating dragged shape following finger/cursor */}
-      {dragState && draggedShape && (
+      {dragPos && draggedShape && (
         <div
           style={{
             position: 'fixed',
-            left: dragState.currentX - 45,
-            top: dragState.currentY - 45,
+            left: dragPos.x - 45,
+            top: dragPos.y - 45,
             width: '90px',
             height: '90px',
             background: draggedShape.color,
