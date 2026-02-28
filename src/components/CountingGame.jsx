@@ -10,7 +10,7 @@ const CAR_TYPES = [
 ];
 
 const getLevels = (t) => [
-  { id: 1, target: 3, speed: 2000, title: t.lapsTitle1 || "Warm Up Laps" },
+  { id: 1, target: 3, speed: 2000, title: t.lapsTitle || "Warm Up Laps" },
   { id: 2, target: 5, speed: 1500, title: t.lapsTitle2 || "Piston Cup Heat" },
   { id: 3, target: 8, speed: 1000, title: t.lapsTitle3 || "Radiator Springs Race" },
   { id: 4, target: 10, speed: 800, title: t.lapsTitle4 || "World Grand Prix" },
@@ -49,11 +49,14 @@ export default function CountingGame({ onBack, lang, t }) {
     }, currentLevel.speed);
 
     return () => clearInterval(interval);
-  }, [currentLevel, gameStatus]);
+  }, [levelIdx, gameStatus]);
 
   useEffect(() => {
     const animation = setInterval(() => {
-      setCars(prev => prev.map(car => ({ ...car, x: car.x + car.speed })).filter(car => car.x < 1200));
+      setCars(prev => {
+        if (prev.length === 0) return prev; // Don't trigger re-render when empty
+        return prev.map(car => ({ ...car, x: car.x + car.speed })).filter(car => car.x < 1200);
+      });
     }, 16);
     return () => clearInterval(animation);
   }, []);

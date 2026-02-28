@@ -3,25 +3,31 @@ import { playBoop, playWinSound } from '../utils/audio';
 import Confetti from './Confetti';
 import { renderPersonalizedText } from '../App';
 
-const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LETTERS_EN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LETTERS_AR = 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي';
 const CAR_COLORS = ['#e63946', '#457b9d', '#ffb703', '#2a9d8f'];
 const INITIAL_TIME = 30;
 
-function randomLetter() {
-  return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+function getLetters(lang) {
+  return lang === 'ar' ? LETTERS_AR : LETTERS_EN;
+}
+
+function randomLetter(lang) {
+  const letters = getLetters(lang);
+  return letters[Math.floor(Math.random() * letters.length)];
 }
 
 function pickRandomColor() {
   return CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
 }
 
-function generateWave(targetLetter) {
+function generateWave(targetLetter, lang) {
   const count = Math.floor(Math.random() * 2) + 3; // 3 or 4 cars
   const letters = new Set();
   letters.add(targetLetter);
 
   while (letters.size < count) {
-    const l = randomLetter();
+    const l = randomLetter(lang);
     if (l !== targetLetter) letters.add(l);
   }
 
@@ -39,8 +45,8 @@ function generateWave(targetLetter) {
 }
 
 export default function LetterRacing({ onBack, lang, t }) {
-  const [targetLetter, setTargetLetter] = useState(() => randomLetter());
-  const [cars, setCars] = useState(() => generateWave(randomLetter()));
+  const [targetLetter, setTargetLetter] = useState(() => randomLetter(lang));
+  const [cars, setCars] = useState(() => generateWave(randomLetter(lang), lang));
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
   const [gameStatus, setGameStatus] = useState('playing');
@@ -50,9 +56,9 @@ export default function LetterRacing({ onBack, lang, t }) {
 
   // Initialize first wave with the correct target
   useEffect(() => {
-    const firstTarget = randomLetter();
+    const firstTarget = randomLetter(lang);
     setTargetLetter(firstTarget);
-    setCars(generateWave(firstTarget));
+    setCars(generateWave(firstTarget, lang));
   }, []);
 
   // Countdown timer
@@ -84,7 +90,7 @@ export default function LetterRacing({ onBack, lang, t }) {
         // Only spawn if most cars from previous wave are gone
         const activeCars = prev.filter(c => c.x < 900);
         if (activeCars.length <= 1) {
-          return [...prev, ...generateWave(targetLetter)];
+          return [...prev, ...generateWave(targetLetter, lang)];
         }
         return prev;
       });
@@ -112,10 +118,10 @@ export default function LetterRacing({ onBack, lang, t }) {
   }, [score]);
 
   const startNewRound = useCallback(() => {
-    const newTarget = randomLetter();
+    const newTarget = randomLetter(lang);
     setTargetLetter(newTarget);
-    setCars(generateWave(newTarget));
-  }, []);
+    setCars(generateWave(newTarget, lang));
+  }, [lang]);
 
   const handleCarClick = useCallback((carId, letter) => {
     if (gameStatus !== 'playing') return;
@@ -137,9 +143,9 @@ export default function LetterRacing({ onBack, lang, t }) {
   }, [gameStatus, targetLetter, startNewRound]);
 
   const handlePlayAgain = () => {
-    const newTarget = randomLetter();
+    const newTarget = randomLetter(lang);
     setTargetLetter(newTarget);
-    setCars(generateWave(newTarget));
+    setCars(generateWave(newTarget, lang));
     setScore(0);
     setTimeLeft(INITIAL_TIME);
     setGameStatus('playing');
@@ -293,7 +299,7 @@ export default function LetterRacing({ onBack, lang, t }) {
                 transition: 'transform 0.1s',
               }}
             >
-              <span style={{ transform: isAr ? 'scaleX(-1)' : 'none' }}>{car.letter}</span>
+              {car.letter}
             </div>
           ))}
 
