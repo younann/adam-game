@@ -57,7 +57,7 @@ const ENGLISH_LETTERS = [
 
 // ─── ARABIC LETTERS (28 letters) ────────────────────────────────────────────
 const ARABIC_LETTERS = [
-  { label: '\u0623', strokes: [line(0.5, 0.8, 0.5, 0.3, 10), [{ x: 0.52, y: 0.2 }, { x: 0.48, y: 0.18 }]] }, // أ alef
+  { label: '\u0623', strokes: [line(0.5, 0.25, 0.5, 0.75, 10), [{ x: 0.52, y: 0.15 }, { x: 0.48, y: 0.13 }]] }, // أ alef (top to bottom)
   { label: '\u0628', strokes: [[...line(0.8, 0.45, 0.5, 0.45, 6), ...arc(0.5, 0.4, 0.15, 0.12, Math.PI / 2, Math.PI, 6), ...line(0.35, 0.4, 0.35, 0.35, 3)], [{ x: 0.55, y: 0.6 }]] }, // ب ba
   { label: '\u062A', strokes: [[...line(0.8, 0.45, 0.5, 0.45, 6), ...arc(0.5, 0.4, 0.15, 0.12, Math.PI / 2, Math.PI, 6), ...line(0.35, 0.4, 0.35, 0.35, 3)], [{ x: 0.5, y: 0.28 }, { x: 0.6, y: 0.28 }]] }, // ت ta
   { label: '\u062B', strokes: [[...line(0.8, 0.5, 0.5, 0.5, 6), ...arc(0.5, 0.45, 0.15, 0.12, Math.PI / 2, Math.PI, 6)], [{ x: 0.5, y: 0.28 }, { x: 0.6, y: 0.28 }, { x: 0.55, y: 0.2 }]] }, // ث tha
@@ -213,17 +213,28 @@ function drawDashedPath(ctx, item, cw, ch) {
   }
 }
 
+// ─── Check if a stroke is a "dot" (decorative mark, not a traceable path) ───
+function isDotStroke(stroke) {
+  if (stroke.length <= 3) {
+    // Check total length - dots are very short
+    let totalLen = 0;
+    for (let i = 1; i < stroke.length; i++) {
+      const dx = stroke[i].x - stroke[i - 1].x;
+      const dy = stroke[i].y - stroke[i - 1].y;
+      totalLen += Math.sqrt(dx * dx + dy * dy);
+    }
+    return totalLen < 0.08; // Very short in normalized space = dot
+  }
+  return false;
+}
+
 // ─── Generate checkpoints from path data ────────────────────────────────────
 function generateCheckpoints(item, cw, ch, spacing = 20) {
   const checkpoints = [];
   item.strokes.forEach((stroke) => {
-    if (stroke.length < 2) {
-      // Dot checkpoints
-      stroke.forEach((pt) => {
-        checkpoints.push({ x: pt.x * cw, y: pt.y * ch, covered: false });
-      });
-      return;
-    }
+    // Skip dot strokes - they're decorative and shouldn't affect progress
+    if (isDotStroke(stroke)) return;
+
     let accumulated = 0;
     checkpoints.push({ x: stroke[0].x * cw, y: stroke[0].y * ch, covered: false });
     for (let i = 1; i < stroke.length; i++) {
@@ -264,7 +275,6 @@ export default function TracingGame({ onBack, lang, t }) {
   const drawingRef = useRef(false);
   const lastPointRef = useRef(null);
   const checkpointsRef = useRef([]);
-  const pathImageRef = useRef(null);
 
   // ── Current items list based on mode + lang ─────────────────────────────
   const getItems = useCallback(() => {
@@ -314,9 +324,6 @@ export default function TracingGame({ onBack, lang, t }) {
 
     // Draw the dashed path template
     drawDashedPath(ctx, item, cw, ch);
-
-    // Save the background image for redrawing user strokes on top
-    pathImageRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     // Generate checkpoints
     checkpointsRef.current = generateCheckpoints(item, cw, ch);
