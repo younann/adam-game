@@ -111,6 +111,22 @@ export const translations = {
     jigsawPlayAgain: "PLAY AGAIN",
     jigsawNextImage: "NEXT IMAGE",
     jigsawChoose: "Choose a picture!",
+
+    // Maze Runner
+    mazeTitle: "🚗 MAZE RUNNER",
+    mazeGameTitle: "Maze Navigator",
+    mazeEasy: "Easy",
+    mazeMedium: "Medium",
+    mazeHard: "Hard",
+    mazeStart: "START RACE",
+    mazeComplete: "MAZE COMPLETE!",
+    mazeTime: "Time",
+    mazeMoves: "Moves",
+    mazeCollected: "Collected",
+    mazeScore: "Score",
+    mazePlayAgain: "PLAY AGAIN",
+    mazeNewMaze: "NEW MAZE",
+    mazeGoal: "Find the finish line!",
   },
   ar: {
     title: "مدرسة مكوين",
@@ -224,5 +240,21 @@ export const translations = {
     jigsawPlayAgain: "العب مرة أخرى",
     jigsawNextImage: "صورة جديدة",
     jigsawChoose: "!اختر صورة",
+
+    // Maze Runner
+    mazeTitle: "🚗 متاهة السباق",
+    mazeGameTitle: "ملاح المتاهة",
+    mazeEasy: "سهل",
+    mazeMedium: "متوسط",
+    mazeHard: "صعب",
+    mazeStart: "ابدأ السباق",
+    mazeComplete: "!تم إكمال المتاهة",
+    mazeTime: "الوقت",
+    mazeMoves: "الحركات",
+    mazeCollected: "المجموعات",
+    mazeScore: "النتيجة",
+    mazePlayAgain: "العب مرة أخرى",
+    mazeNewMaze: "متاهة جديدة",
+    mazeGoal: "!ابحث عن خط النهاية",
   }
 };

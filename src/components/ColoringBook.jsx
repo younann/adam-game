@@ -91,12 +91,22 @@ export default function ColoringBook({ onBack, lang, t }) {
   const [imgIdx, setImgIdx] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [undoStack, setUndoStack] = useState([]);
-  const [drawMode, setDrawMode] = useState('draw'); // 'draw' or 'fill'
+  const [drawMode, setDrawMode] = useState('draw'); // 'draw', 'fill', or 'eraser'
+
+  // Zoom state
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const lastPanPoint = useRef(null);
+  const lastPinchDist = useRef(null);
 
   // Storage for drawings per image
   const [savedDrawings, setSavedDrawings] = useState({});
 
   const currentImage = images[imgIdx];
+
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 4;
 
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return;
@@ -122,7 +132,7 @@ export default function ColoringBook({ onBack, lang, t }) {
         if (tempCanvas.width > 0 && tempCanvas.height > 0) {
            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
         }
-        
+
         // Also restore from saved drawing if it exists and temp was empty
         if (savedDrawings[currentImage.id]) {
           const img = new Image();
@@ -137,6 +147,45 @@ export default function ColoringBook({ onBack, lang, t }) {
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, [imgIdx]);
+
+  // Clamp pan offset so content stays visible
+  const clampPan = useCallback((x, y, z) => {
+    if (z <= 1) return { x: 0, y: 0 };
+    const container = containerRef.current;
+    if (!container) return { x, y };
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const maxX = (w * (z - 1)) / 2;
+    const maxY = (h * (z - 1)) / 2;
+    return {
+      x: Math.max(-maxX, Math.min(maxX, x)),
+      y: Math.max(-maxY, Math.min(maxY, y))
+    };
+  }, []);
+
+  const handleZoomIn = () => {
+    setZoom(prev => {
+      const next = Math.min(prev + 0.5, MAX_ZOOM);
+      setPanOffset(p => clampPan(p.x, p.y, next));
+      return next;
+    });
+    playBoop();
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => {
+      const next = Math.max(prev - 0.5, MIN_ZOOM);
+      setPanOffset(p => clampPan(p.x, p.y, next));
+      return next;
+    });
+    playBoop();
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+    playBoop();
+  };
 
   const saveCurrentDrawing = () => {
     if (canvasRef.current) {
@@ -191,20 +240,39 @@ export default function ColoringBook({ onBack, lang, t }) {
       clientX = e.clientX;
       clientY = e.clientY;
     }
+    // Account for zoom transform: the displayed rect already reflects CSS transform,
+    // so getBoundingClientRect gives the zoomed/panned rect position.
     return {
       offsetX: clientX - rect.left,
       offsetY: clientY - rect.top
     };
   };
 
+  // Get pinch distance between two touch points
+  const getPinchDist = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
   const handleCanvasDown = (e) => {
+    // Handle two-finger pinch-to-zoom start
+    if (e.touches && e.touches.length === 2) {
+      e.preventDefault();
+      lastPinchDist.current = getPinchDist(e.touches);
+      setIsPanning(true);
+      return;
+    }
+
+    // If zoomed in beyond 1x, two-finger pan or right-click can pan
+    // For single touch/click on zoomed canvas, allow panning with a secondary gesture
+    // But primary touch/click should still draw
+
     if (drawMode === 'fill') {
-      // Fill mode: save to undo, then flood fill
       pushToUndoStack();
       const { offsetX, offsetY } = getCoordinates(e);
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      // Scale coordinates to actual canvas pixel coordinates
       const scaleX = canvas.width / canvas.getBoundingClientRect().width;
       const scaleY = canvas.height / canvas.getBoundingClientRect().height;
       const pixelX = Math.floor(offsetX * scaleX);
@@ -212,8 +280,24 @@ export default function ColoringBook({ onBack, lang, t }) {
       floodFill(ctx, pixelX, pixelY, selectedColor);
       saveCurrentDrawing();
       playBoop();
+    } else if (drawMode === 'eraser') {
+      pushToUndoStack();
+      const { offsetX, offsetY } = getCoordinates(e);
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.moveTo(offsetX, offsetY);
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.restore(); // We'll set composite per stroke in draw()
+      // Actually start the path for erasing
+      ctx.beginPath();
+      ctx.moveTo(offsetX, offsetY);
+      setIsDrawing(true);
     } else {
-      // Draw mode: save to undo stack, then start drawing
+      // Draw mode
       pushToUndoStack();
       const { offsetX, offsetY } = getCoordinates(e);
       const ctx = canvasRef.current.getContext('2d');
@@ -226,18 +310,63 @@ export default function ColoringBook({ onBack, lang, t }) {
   };
 
   const draw = (e) => {
-    if (!isDrawing || drawMode === 'fill') return;
+    // Handle pinch-to-zoom
+    if (e.touches && e.touches.length === 2) {
+      e.preventDefault();
+      const dist = getPinchDist(e.touches);
+      if (lastPinchDist.current) {
+        const delta = dist - lastPinchDist.current;
+        setZoom(prev => {
+          const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta * 0.01));
+          setPanOffset(p => clampPan(p.x, p.y, next));
+          return next;
+        });
+      }
+      lastPinchDist.current = dist;
+
+      // Pan with two fingers
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      if (lastPanPoint.current) {
+        const dx = midX - lastPanPoint.current.x;
+        const dy = midY - lastPanPoint.current.y;
+        setPanOffset(prev => clampPan(prev.x + dx, prev.y + dy, zoom));
+      }
+      lastPanPoint.current = { x: midX, y: midY };
+      return;
+    }
+
+    if (!isDrawing) return;
+    if (drawMode === 'fill') return;
+
     const { offsetX, offsetY } = getCoordinates(e);
     const ctx = canvasRef.current.getContext('2d');
-    ctx.lineTo(offsetX, offsetY);
-    ctx.stroke();
+
+    if (drawMode === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineTo(offsetX, offsetY);
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      ctx.lineTo(offsetX, offsetY);
+      ctx.stroke();
+    }
   };
 
   const stopDrawing = () => {
     if (isDrawing) {
       setIsDrawing(false);
+      // Reset composite operation
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.globalCompositeOperation = 'source-over';
       saveCurrentDrawing();
     }
+    setIsPanning(false);
+    lastPinchDist.current = null;
+    lastPanPoint.current = null;
   };
 
   const handleImageSelect = (idx) => {
@@ -245,7 +374,10 @@ export default function ColoringBook({ onBack, lang, t }) {
     saveCurrentDrawing();
     playBoop();
     setImgIdx(idx);
-    setUndoStack([]); // Clear undo stack when switching images
+    setUndoStack([]);
+    // Reset zoom when switching images
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const clearCanvas = () => {
@@ -260,14 +392,20 @@ export default function ColoringBook({ onBack, lang, t }) {
     playBoop();
   };
 
+  const getCursor = () => {
+    if (drawMode === 'fill') return 'crosshair';
+    if (drawMode === 'eraser') return 'cell';
+    return 'crosshair';
+  };
+
   return (
-    <div className="game-screen animate-slide-up" style={{ 
-      textAlign: 'center', 
-      flex: 1, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '8px', 
-      minHeight: '400px', 
+    <div className="game-screen animate-slide-up" style={{
+      textAlign: 'center',
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      minHeight: '400px',
       height: '100%',
       justifyContent: 'space-between'
     }}>
@@ -287,7 +425,7 @@ export default function ColoringBook({ onBack, lang, t }) {
               borderRadius: '8px'
             }}
           >
-            {t.undo}
+            ↩️ {t.undo}
           </button>
           <button
             onClick={() => { setDrawMode('draw'); playBoop(); }}
@@ -300,7 +438,7 @@ export default function ColoringBook({ onBack, lang, t }) {
               border: drawMode === 'draw' ? '2px solid white' : '1px solid rgba(255,255,255,0.2)'
             }}
           >
-            {t.draw}
+            🖌️ {t.draw}
           </button>
           <button
             onClick={() => { setDrawMode('fill'); playBoop(); }}
@@ -313,68 +451,183 @@ export default function ColoringBook({ onBack, lang, t }) {
               border: drawMode === 'fill' ? '2px solid white' : '1px solid rgba(255,255,255,0.2)'
             }}
           >
-            {t.fill}
+            🪣 {t.fill}
           </button>
-          <button onClick={clearCanvas} style={{ fontSize: '0.75rem', background: 'var(--mcqueen-red)', color: 'white', padding: '0.5rem 0.7rem', borderRadius: '8px' }}>{t.clear}</button>
+          <button
+            onClick={() => { setDrawMode('eraser'); playBoop(); }}
+            style={{
+              fontSize: '0.75rem',
+              background: drawMode === 'eraser' ? '#f97316' : 'rgba(255,255,255,0.1)',
+              color: 'white',
+              padding: '0.5rem 0.7rem',
+              borderRadius: '8px',
+              border: drawMode === 'eraser' ? '2px solid white' : '1px solid rgba(255,255,255,0.2)'
+            }}
+          >
+            🧹 {t.eraser}
+          </button>
+          <button onClick={clearCanvas} style={{ fontSize: '0.75rem', background: 'var(--mcqueen-red)', color: 'white', padding: '0.5rem 0.7rem', borderRadius: '8px' }}>🗑️ {t.clear}</button>
         </div>
       </div>
 
-      {/* Canvas area */}
-      <div
-        ref={containerRef}
-        style={{
-          flex: 1,
-          position: 'relative',
-          margin: '0 auto',
-          width: '100%',
-          maxWidth: '750px',
-          minHeight: '200px',
-          backgroundColor: 'white',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-          touchAction: 'none',
-          border: '4px solid #333'
+      {/* Canvas area with zoom */}
+      <div style={{
+        flex: 1,
+        position: 'relative',
+        margin: '0 auto',
+        width: '100%',
+        maxWidth: '750px',
+        minHeight: '250px',
+        overflow: 'hidden',
+        borderRadius: '20px',
+      }}>
+        {/* Zoom controls */}
+        <div style={{
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
+          zIndex: 10,
+          display: 'flex',
+          gap: '4px',
+          flexDirection: 'column',
         }}>
-        {/* The target coloring image */}
-        <img
-          src={currentImage.src}
-          key={currentImage.id}
-          alt="Coloring page"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            pointerEvents: 'none',
-            zIndex: 1,
-            display: 'block'
-          }}
-        />
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= MAX_ZOOM}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              fontSize: '1.2rem',
+              border: '2px solid rgba(255,255,255,0.3)',
+              cursor: zoom >= MAX_ZOOM ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              opacity: zoom >= MAX_ZOOM ? 0.4 : 1,
+            }}
+            title={t.zoomIn}
+          >+</button>
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= MIN_ZOOM}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              fontSize: '1.2rem',
+              border: '2px solid rgba(255,255,255,0.3)',
+              cursor: zoom <= MIN_ZOOM ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              opacity: zoom <= MIN_ZOOM ? 0.4 : 1,
+            }}
+            title={t.zoomOut}
+          >-</button>
+          {zoom > 1 && (
+            <button
+              onClick={handleResetZoom}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(0,0,0,0.6)',
+                color: 'white',
+                fontSize: '0.6rem',
+                border: '2px solid rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+              title={t.resetZoom}
+            >{t.resetZoom}</button>
+          )}
+        </div>
 
-        {/* The drawing canvas */}
-        <canvas
-          ref={canvasRef}
-          onMouseDown={handleCanvasDown}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseOut={stopDrawing}
-          onTouchStart={handleCanvasDown}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+        {/* Zoom level indicator */}
+        {zoom > 1 && (
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            zIndex: 10,
+            background: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '12px',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+          }}>
+            {Math.round(zoom * 100)}%
+          </div>
+        )}
+
+        <div
+          ref={containerRef}
           style={{
+            width: '100%',
+            height: '100%',
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            mixBlendMode: 'multiply',
-            zIndex: 2,
-            cursor: drawMode === 'fill' ? 'crosshair' : 'crosshair'
-          }}
-        />
+            backgroundColor: 'white',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+            touchAction: 'none',
+            border: '4px solid #333',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+            transformOrigin: 'center center',
+          }}>
+          {/* The target coloring image */}
+          <img
+            src={currentImage.src}
+            key={currentImage.id}
+            alt="Coloring page"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              pointerEvents: 'none',
+              zIndex: 1,
+              display: 'block'
+            }}
+          />
+
+          {/* The drawing canvas */}
+          <canvas
+            ref={canvasRef}
+            onMouseDown={handleCanvasDown}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseOut={stopDrawing}
+            onTouchStart={handleCanvasDown}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              mixBlendMode: drawMode === 'eraser' ? 'normal' : 'multiply',
+              zIndex: 2,
+              cursor: getCursor()
+            }}
+          />
+        </div>
       </div>
 
       {/* Image thumbnail selector strip */}
@@ -429,16 +682,16 @@ export default function ColoringBook({ onBack, lang, t }) {
           {colors.map(color => (
             <button
               key={color}
-              onClick={() => { setSelectedColor(color); playBoop(); }}
+              onClick={() => { setSelectedColor(color); if (drawMode === 'eraser') setDrawMode('draw'); playBoop(); }}
               style={{
                 width: 'clamp(28px, 7vw, 36px)',
                 height: 'clamp(28px, 7vw, 36px)',
                 background: color,
-                border: selectedColor === color ? '3px solid white' : '1px solid rgba(255,255,255,0.3)',
+                border: selectedColor === color && drawMode !== 'eraser' ? '3px solid white' : '1px solid rgba(255,255,255,0.3)',
                 borderRadius: '50%',
-                transform: selectedColor === color ? 'scale(1.15)' : 'scale(1)',
+                transform: selectedColor === color && drawMode !== 'eraser' ? 'scale(1.15)' : 'scale(1)',
                 padding: 0,
-                boxShadow: selectedColor === color ? '0 0 10px white' : 'none'
+                boxShadow: selectedColor === color && drawMode !== 'eraser' ? '0 0 10px white' : 'none'
               }}
             />
           ))}
