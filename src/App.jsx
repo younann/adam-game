@@ -9,6 +9,7 @@ import LetterRacing from './components/LetterRacing';
 import PhotoBooth from './components/PhotoBooth';
 import JigsawPuzzle from './components/JigsawPuzzle';
 import MazeRunner from './components/MazeRunner';
+import TracingGame from './components/TracingGame';
 import { translations } from './utils/translations';
 
 // Importing car assets for decoration
@@ -187,6 +188,13 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
         >
           {t.mazeTitle}
         </button>
+        <button
+          className="menu-btn"
+          onClick={() => onStartGame('tracing')}
+          style={{ background: '#e07c24', color: 'white', borderBottom: '6px solid #b5631d' }}
+        >
+          {t.tracingTitle}
+        </button>
       </div>
 
       <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
@@ -229,6 +237,7 @@ export default function App() {
       case 'photo': return <PhotoBooth onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'jigsaw': return <JigsawPuzzle onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'maze': return <MazeRunner onBack={() => setGameState('menu')} lang={lang} t={t} />;
+      case 'tracing': return <TracingGame onBack={() => setGameState('menu')} lang={lang} t={t} />;
       default: return <MainMenu onStartGame={(game) => setGameState(game)} lang={lang} setLang={setLang} />;
     }
   };

@@ -127,6 +127,22 @@ export const translations = {
     mazePlayAgain: "PLAY AGAIN",
     mazeNewMaze: "NEW MAZE",
     mazeGoal: "Find the finish line!",
+
+    // Tracing Game
+    tracingTitle: "✏️ TRACING",
+    tracingGameTitle: "Tracing Track",
+    tracingLetters: "LETTERS",
+    tracingNumbers: "NUMBERS",
+    tracingShapes: "SHAPES",
+    tracingTrace: "Trace the",
+    tracingLetter: "letter",
+    tracingNumber: "number",
+    tracingShape: "shape",
+    tracingProgress: "Progress",
+    tracingComplete: "PERFECT TRACE!",
+    tracingNext: "NEXT",
+    tracingClear: "CLEAR",
+    tracingOf: "of",
   },
   ar: {
     title: "مدرسة مكوين",
@@ -256,5 +272,21 @@ export const translations = {
     mazePlayAgain: "العب مرة أخرى",
     mazeNewMaze: "متاهة جديدة",
     mazeGoal: "!ابحث عن خط النهاية",
+
+    // Tracing Game
+    tracingTitle: "✏️ التتبع",
+    tracingGameTitle: "مسار التتبع",
+    tracingLetters: "الحروف",
+    tracingNumbers: "الأرقام",
+    tracingShapes: "الأشكال",
+    tracingTrace: "تتبع",
+    tracingLetter: "الحرف",
+    tracingNumber: "الرقم",
+    tracingShape: "الشكل",
+    tracingProgress: "التقدم",
+    tracingComplete: "!تتبع ممتاز",
+    tracingNext: "التالي",
+    tracingClear: "مسح",
+    tracingOf: "من",
   }
 };
