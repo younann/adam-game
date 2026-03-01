@@ -7,6 +7,7 @@ import ColoringBook from './components/ColoringBook';
 import MemoryMatch from './components/MemoryMatch';
 import LetterRacing from './components/LetterRacing';
 import PhotoBooth from './components/PhotoBooth';
+import JigsawPuzzle from './components/JigsawPuzzle';
 import { translations } from './utils/translations';
 
 // Importing car assets for decoration
@@ -171,6 +172,13 @@ const MainMenu = ({ onStartGame, lang, setLang }) => {
         >
           {t.game7}
         </button>
+        <button
+          className="menu-btn"
+          onClick={() => onStartGame('jigsaw')}
+          style={{ background: '#f97316', color: 'white', borderBottom: '6px solid #c75f12' }}
+        >
+          {t.jigsawTitle}
+        </button>
       </div>
 
       <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
@@ -211,6 +219,7 @@ export default function App() {
       case 'memory': return <MemoryMatch onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'letters': return <LetterRacing onBack={() => setGameState('menu')} lang={lang} t={t} />;
       case 'photo': return <PhotoBooth onBack={() => setGameState('menu')} lang={lang} t={t} />;
+      case 'jigsaw': return <JigsawPuzzle onBack={() => setGameState('menu')} lang={lang} t={t} />;
       default: return <MainMenu onStartGame={(game) => setGameState(game)} lang={lang} setLang={setLang} />;
     }
   };

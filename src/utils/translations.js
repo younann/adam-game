@@ -85,6 +85,10 @@ export const translations = {
     undo: "UNDO",
     fill: "FILL",
     draw: "DRAW",
+    eraser: "ERASER",
+    zoomIn: "Zoom In",
+    zoomOut: "Zoom Out",
+    resetZoom: "Reset",
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit Fullscreen",
 
@@ -95,6 +99,18 @@ export const translations = {
     photoRetake: "RETAKE",
     photoSave: "SAVE PHOTO",
     cameraError: "Could not open camera. Please allow camera access and try again.",
+
+    // Jigsaw Puzzle
+    jigsawTitle: "🧩 Jigsaw Puzzle",
+    jigsawGameTitle: "Puzzle Master",
+    jigsawEasy: "Easy",
+    jigsawMedium: "Medium",
+    jigsawHard: "Hard",
+    jigsawPieces: "pieces",
+    jigsawComplete: "PUZZLE COMPLETE!",
+    jigsawPlayAgain: "PLAY AGAIN",
+    jigsawNextImage: "NEXT IMAGE",
+    jigsawChoose: "Choose a picture!",
   },
   ar: {
     title: "مدرسة مكوين",
@@ -182,6 +198,10 @@ export const translations = {
     undo: "تراجع",
     fill: "ملء",
     draw: "رسم",
+    eraser: "ممحاة",
+    zoomIn: "تكبير",
+    zoomOut: "تصغير",
+    resetZoom: "إعادة",
     fullscreen: "ملء الشاشة",
     exitFullscreen: "خروج من ملء الشاشة",
 
@@ -192,5 +212,17 @@ export const translations = {
     photoRetake: "إعادة التصوير",
     photoSave: "حفظ الصورة",
     cameraError: "تعذر فتح الكاميرا. يرجى السماح بالوصول إلى الكاميرا والمحاولة مرة أخرى.",
+
+    // Jigsaw Puzzle
+    jigsawTitle: "🧩 لعبة التركيب",
+    jigsawGameTitle: "خبير اللغز",
+    jigsawEasy: "سهل",
+    jigsawMedium: "متوسط",
+    jigsawHard: "صعب",
+    jigsawPieces: "قطع",
+    jigsawComplete: "!تم إكمال اللغز",
+    jigsawPlayAgain: "العب مرة أخرى",
+    jigsawNextImage: "صورة جديدة",
+    jigsawChoose: "!اختر صورة",
   }
 };
