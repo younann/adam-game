@@ -23,7 +23,9 @@
       "Bash(clear:*)",
       "mcp__plugin_playwright_playwright__browser_console_messages",
       "mcp__plugin_playwright_playwright__browser_snapshot",
-      "mcp__plugin_playwright_playwright__browser_run_code"
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "Bash(git -C /Users/younan.nwesre/Desktop/personal/kidsgame log --oneline -15)",
+      "mcp__plugin_playwright_playwright__browser_evaluate"
     ]
   }
 }
