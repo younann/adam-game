@@ -89,16 +89,26 @@ const ARABIC_LETTERS = [
 
 // ─── NUMBERS 0-9 ────────────────────────────────────────────────────────────
 const NUMBERS = [
-  { label: '0', strokes: [arc(0.5, 0.5, 0.18, 0.28, 0, Math.PI * 2, 24)] },
-  { label: '1', strokes: [[...line(0.45, 0.3, 0.5, 0.2, 3), ...line(0.5, 0.2, 0.5, 0.8, 10)]] },
-  { label: '2', strokes: [[...arc(0.5, 0.35, 0.18, 0.14, Math.PI * 1.2, -Math.PI * 0.1, 12), ...line(0.67, 0.38, 0.32, 0.8, 10), ...line(0.32, 0.8, 0.7, 0.8, 6).slice(1)]] },
-  { label: '3', strokes: [[...arc(0.5, 0.35, 0.16, 0.13, -Math.PI * 0.7, Math.PI * 0.5, 10), ...arc(0.5, 0.6, 0.16, 0.15, -Math.PI * 0.5, Math.PI * 0.7, 10)]] },
-  { label: '4', strokes: [[...line(0.6, 0.2, 0.3, 0.55, 8), ...line(0.3, 0.55, 0.72, 0.55, 6)], line(0.6, 0.2, 0.6, 0.8, 10)] },
-  { label: '5', strokes: [[...line(0.65, 0.2, 0.35, 0.2, 5), ...line(0.35, 0.2, 0.35, 0.45, 5), ...arc(0.5, 0.52, 0.17, 0.17, -Math.PI * 0.6, Math.PI * 0.7, 12)]] },
-  { label: '6', strokes: [[...arc(0.5, 0.38, 0.16, 0.16, -Math.PI * 0.5, Math.PI * 0.1, 6).reverse(), ...arc(0.5, 0.58, 0.16, 0.16, -Math.PI * 0.8, Math.PI * 1.2, 16)]] },
-  { label: '7', strokes: [[...line(0.3, 0.2, 0.7, 0.2, 6), ...line(0.7, 0.2, 0.45, 0.8, 10).slice(1)]] },
-  { label: '8', strokes: [[...arc(0.5, 0.35, 0.14, 0.13, 0, Math.PI * 2, 14), ...arc(0.5, 0.62, 0.16, 0.15, Math.PI, -Math.PI, 14)]] },
-  { label: '9', strokes: [[...arc(0.5, 0.38, 0.16, 0.16, Math.PI * 0.2, -Math.PI * 1.2, 16), ...line(0.66, 0.42, 0.5, 0.8, 8)]] },
+  // 0: tall oval, start at top, go clockwise
+  { label: '0', strokes: [arc(0.5, 0.5, 0.17, 0.28, -Math.PI / 2, Math.PI * 1.5, 28)] },
+  // 1: small serif then straight down
+  { label: '1', strokes: [[...line(0.43, 0.3, 0.5, 0.2, 3), ...line(0.5, 0.2, 0.5, 0.8, 10)]] },
+  // 2: top arc going over the top (left to right), diagonal down-left, horizontal right
+  { label: '2', strokes: [[...arc(0.5, 0.35, 0.18, 0.15, -Math.PI, -Math.PI * 0.1, 14), ...line(0.68, 0.37, 0.3, 0.8, 10).slice(1), ...line(0.3, 0.8, 0.7, 0.8, 6).slice(1)]] },
+  // 3: top arc right-facing, then bottom arc right-facing
+  { label: '3', strokes: [[...arc(0.48, 0.35, 0.17, 0.14, -Math.PI * 0.75, Math.PI * 0.4, 10), ...arc(0.48, 0.63, 0.18, 0.15, -Math.PI * 0.4, Math.PI * 0.75, 10)]] },
+  // 4: down-right diagonal, horizontal bar, then separate vertical stroke
+  { label: '4', strokes: [[...line(0.58, 0.2, 0.28, 0.55, 8), ...line(0.28, 0.55, 0.72, 0.55, 6)], line(0.58, 0.2, 0.58, 0.8, 10)] },
+  // 5: horizontal top, vertical down, then bottom curve connecting from stem
+  { label: '5', strokes: [[...line(0.65, 0.2, 0.35, 0.2, 5), ...line(0.35, 0.2, 0.35, 0.48, 5).slice(1), ...arc(0.45, 0.58, 0.2, 0.18, -Math.PI * 0.65, Math.PI * 0.75, 14)]] },
+  // 6: curve from top-right sweeping down, then full circle at bottom
+  { label: '6', strokes: [[...arc(0.5, 0.5, 0.18, 0.3, -Math.PI * 0.4, Math.PI * 0.1, 6).reverse(), ...arc(0.5, 0.57, 0.18, 0.18, Math.PI * 0.1, Math.PI * 2.1, 20)]] },
+  // 7: horizontal top-left to right, diagonal down-left
+  { label: '7', strokes: [[...line(0.3, 0.2, 0.7, 0.2, 6), ...line(0.7, 0.2, 0.42, 0.8, 10).slice(1)]] },
+  // 8: top circle clockwise, then bottom circle clockwise
+  { label: '8', strokes: [[...arc(0.5, 0.35, 0.15, 0.14, -Math.PI / 2, Math.PI * 1.5, 16), ...arc(0.5, 0.63, 0.17, 0.16, -Math.PI / 2, Math.PI * 1.5, 16)]] },
+  // 9: full circle at top, then stem down
+  { label: '9', strokes: [[...arc(0.5, 0.37, 0.17, 0.16, Math.PI * 0.5, -Math.PI * 1.5, 20), ...line(0.67, 0.37, 0.55, 0.8, 8).slice(1)]] },
 ];
 
 // ─── SHAPES ─────────────────────────────────────────────────────────────────
@@ -363,7 +373,7 @@ export default function TracingGame({ onBack, lang, t }) {
 
   // ── Completion check ────────────────────────────────────────────────────
   useEffect(() => {
-    if (progress >= 80 && !completed && mode) {
+    if (progress >= 99 && !completed && mode) {
       setCompleted(true);
       setShowConfetti(true);
       playWinSound();
