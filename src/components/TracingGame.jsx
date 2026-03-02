@@ -152,40 +152,68 @@ const SHAPE_LABELS_AR = {
   Star: 'نجمة', Diamond: 'معين', Heart: 'قلب',
 };
 
-// ─── Draw dashed outline on canvas ──────────────────────────────────────────
+// ─── Sample evenly-spaced dots along a stroke polyline ──────────────────────
+function sampleDotsAlongStroke(stroke, cw, ch, spacing) {
+  const dots = [];
+  if (stroke.length === 0) return dots;
+  dots.push({ x: stroke[0].x * cw, y: stroke[0].y * ch });
+  let accumulated = 0;
+  for (let i = 1; i < stroke.length; i++) {
+    const px = stroke[i - 1].x * cw, py = stroke[i - 1].y * ch;
+    const cx = stroke[i].x * cw, cy = stroke[i].y * ch;
+    const dx = cx - px, dy = cy - py;
+    const segLen = Math.sqrt(dx * dx + dy * dy);
+    if (segLen === 0) continue;
+    let pos = 0;
+    while (pos < segLen) {
+      const remaining = spacing - accumulated;
+      if (pos + remaining <= segLen) {
+        pos += remaining;
+        accumulated = 0;
+        const t = pos / segLen;
+        dots.push({ x: px + dx * t, y: py + dy * t });
+      } else {
+        accumulated += segLen - pos;
+        break;
+      }
+    }
+  }
+  return dots;
+}
+
+// ─── Draw dotted outline on canvas ──────────────────────────────────────────
 function drawDashedPath(ctx, item, cw, ch) {
   // White background
   ctx.clearRect(0, 0, cw, ch);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, cw, ch);
 
-  // Draw each stroke as dashed path
+  const DOT_RADIUS = 5;
+  const DOT_SPACING = 14;
+
+  // Draw each stroke as dots along the path
   item.strokes.forEach((stroke) => {
-    if (stroke.length < 2) {
-      // Single point = dot (for Arabic dots)
+    if (isDotStroke(stroke)) {
+      // Arabic letter dots - render as darker filled circles
       stroke.forEach((pt) => {
         ctx.beginPath();
-        ctx.arc(pt.x * cw, pt.y * ch, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ccc';
+        ctx.arc(pt.x * cw, pt.y * ch, DOT_RADIUS + 1, 0, Math.PI * 2);
+        ctx.fillStyle = '#999';
         ctx.fill();
       });
       return;
     }
-    ctx.beginPath();
-    ctx.strokeStyle = '#ccc';
-    ctx.lineWidth = 4;
-    ctx.setLineDash([12, 8]);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.moveTo(stroke[0].x * cw, stroke[0].y * ch);
-    for (let i = 1; i < stroke.length; i++) {
-      ctx.lineTo(stroke[i].x * cw, stroke[i].y * ch);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
+    // Sample evenly-spaced dots along the stroke
+    const dots = sampleDotsAlongStroke(stroke, cw, ch, DOT_SPACING);
+    dots.forEach((dot) => {
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, DOT_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = '#bbb';
+      ctx.fill();
+    });
   });
 
-  // Draw start point (green circle) at first point of first stroke
+  // Draw start point (green, slightly larger) at first point of first stroke
   const firstStroke = item.strokes[0];
   if (firstStroke && firstStroke.length >= 1) {
     const start = firstStroke[0];
@@ -193,7 +221,7 @@ function drawDashedPath(ctx, item, cw, ch) {
     const sy = start.y * ch;
 
     ctx.beginPath();
-    ctx.arc(sx, sy, 10, 0, Math.PI * 2);
+    ctx.arc(sx, sy, DOT_RADIUS + 4, 0, Math.PI * 2);
     ctx.fillStyle = '#2a9d8f';
     ctx.fill();
 
